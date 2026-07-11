@@ -29,7 +29,7 @@ export function WelcomeScreen({
 }) {
   return (
     <div className="flex flex-col items-center justify-center min-h-full px-4 sm:px-6 py-10 sm:py-16">
-      <div className="w-full max-w-[640px]">
+      <div className="w-full max-w-[860px]">
         <motion.div className="text-center mb-8 sm:mb-10"
           initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
         >

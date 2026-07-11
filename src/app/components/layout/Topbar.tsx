@@ -10,34 +10,30 @@ const MODELS: Model[] = [
 ];
 
 export function Topbar({
-  sidebarOpen, onToggleSidebar, onNewChat, selectedModel, onSelectModel, showOnMobile,
+  onToggleSidebar, onNewChat, selectedModel, onSelectModel,
 }: {
-  sidebarOpen: boolean; onToggleSidebar: () => void; onNewChat: () => void;
-  selectedModel: string; onSelectModel: (name: string) => void; showOnMobile: boolean;
+  onToggleSidebar: () => void; onNewChat: () => void;
+  selectedModel: string; onSelectModel: (name: string) => void;
 }) {
   const [showMenu, setShowMenu] = useState(false);
 
   return (
     <header className="relative z-10 flex items-center justify-between px-5 py-3 border-b border-border/40 flex-shrink-0 backdrop-blur-sm">
       <div className="flex items-center gap-2">
-        {(!sidebarOpen || showOnMobile) && (
-          <>
-            <motion.button onClick={onToggleSidebar}
-              className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-all"
-              whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
-            >
-              <Menu size={15} />
-            </motion.button>
-            <div className="w-px h-4 bg-border mx-1" />
-            <motion.button onClick={onNewChat}
-              className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors px-2 py-1.5 rounded-lg hover:bg-secondary"
-              whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
-            >
-              <Plus size={13} />
-              New
-            </motion.button>
-          </>
-        )}
+        <motion.button onClick={onToggleSidebar}
+          className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-all"
+          whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+        >
+          <Menu size={15} />
+        </motion.button>
+        <div className="w-px h-4 bg-border mx-1" />
+        <motion.button onClick={onNewChat}
+          className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors px-2 py-1.5 rounded-lg hover:bg-secondary"
+          whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+        >
+          <Plus size={13} />
+          New
+        </motion.button>
       </div>
 
       <div className="relative">

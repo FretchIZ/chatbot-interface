@@ -128,7 +128,7 @@ export default function App() {
           style={{ background: "radial-gradient(ellipse 70% 50% at 50% -10%, rgba(217,119,87,0.07) 0%, transparent 70%)" }}
         />
 
-        <Topbar sidebarOpen={sidebarOpen} showOnMobile={isMobile}
+        <Topbar
           onToggleSidebar={() => setSidebarOpen((v) => !v)}
           onNewChat={() => { setMessages([]); setActiveHistory(null); }}
           selectedModel={selectedModel} onSelectModel={setSelectedModel}
@@ -146,7 +146,7 @@ export default function App() {
                 />
               </motion.div>
             ) : (
-              <motion.div key="chat" className="max-w-[680px] mx-auto px-4 sm:px-6 py-8 sm:py-10 space-y-6 sm:space-y-8"
+              <motion.div key="chat" className="max-w-[860px] mx-auto px-4 sm:px-6 py-8 sm:py-10 space-y-6 sm:space-y-8"
                 initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}
               >
                 {messages.map((msg) =>
@@ -186,7 +186,7 @@ export default function App() {
               <div className="absolute inset-x-0 -top-8 h-8 pointer-events-none"
                 style={{ background: "linear-gradient(to top, var(--background), transparent)" }}
               />
-              <div className="max-w-[680px] mx-auto">
+              <div className="max-w-[860px] mx-auto">
                 <ChatInput input={input} setInput={setInput} onSend={() => handleSend()}
                   onKey={handleKey} onResize={autoResize} textareaRef={textareaRef} isThinking={isThinking}
                 />
