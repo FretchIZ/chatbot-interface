@@ -63,24 +63,38 @@ export default function App() {
     el.style.height = Math.min(el.scrollHeight, 220) + "px";
   };
 
-  const handleSend = (text?: string) => {
+  const handleSend = async (text?: string) => {
     const content = (text ?? input).trim();
     if (!content || isThinking) return;
     setInput("");
     if (textareaRef.current) textareaRef.current.style.height = "auto";
-    setMessages((prev) => [...prev, { id: Date.now(), role: "user", content }]);
+    const userMsg: Message = { id: Date.now(), role: "user", content };
+    setMessages((prev) => [...prev, userMsg]);
     setIsThinking(true);
-    setTimeout(() => {
-      setIsThinking(false);
+
+    try {
+      const history = messages.map((m) => ({ role: m.role, content: m.content }));
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: content, history }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Request failed");
+
       setMessages((prev) => [
         ...prev,
-        {
-          id: Date.now() + 1,
-          role: "assistant",
-          content: `I understand you're asking about: **"${content}"**\n\nThis is a live demo — in production I'd stream a thoughtful response via the Claude API. My agentic capabilities include:\n\n• **Web search** — real-time information retrieval\n• **Code execution** — run and test code in a sandbox\n• **File analysis** — read and reason over documents\n• **Multi-step reasoning** — break complex problems into steps`,
-        },
+        { id: Date.now() + 1, role: "assistant", content: data.reply },
       ]);
-    }, 2000);
+    } catch (err: any) {
+      toast.error(err.message || "Something went wrong");
+      setMessages((prev) => [
+        ...prev,
+        { id: Date.now() + 1, role: "assistant", content: `**Error:** ${err.message || "Unable to get response"}` },
+      ]);
+    } finally {
+      setIsThinking(false);
+    }
   };
 
   const copyMessage = (id: number, content: string) => {
