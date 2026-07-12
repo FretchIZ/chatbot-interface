@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, Fragment } from "react";
 import { motion } from "motion/react";
 import { Sparkles, Copy, Check, ThumbsUp, ThumbsDown, RefreshCw } from "lucide-react";
 import type { Message } from "../../types";
@@ -38,30 +38,148 @@ export function AssistantBubble({
 }) {
   const [liked, setLiked] = useState<boolean | null>(null);
 
-  const renderContent = (text: string) =>
-    text.split("\n").map((line, i, arr) => {
-      if (line.startsWith("**") && line.endsWith("**") && line.length > 4) {
-        return <strong key={i} className="text-foreground font-semibold">{line.slice(2, -2)}</strong>;
+  function parseInline(text: string) {
+    const parts = text.split(/(\*\*.+?\*\*)/);
+    return parts.map((p, j) => {
+      if (p.startsWith("**") && p.endsWith("**") && p.length > 4) {
+        return <strong key={j} className="text-foreground font-semibold">{p.slice(2, -2)}</strong>;
       }
-      if (line.startsWith("• ")) {
-        const parts = line.slice(2).split(/\*\*(.+?)\*\*/);
-        return (
-          <div key={i} className="flex gap-2 my-0.5">
-            <span className="text-primary mt-1 flex-shrink-0">·</span>
-            <span>
-              {parts.map((p, j) =>
-                j % 2 === 1 ? <strong key={j} className="text-foreground font-semibold">{p}</strong> : p
-              )}
-            </span>
+      const codeParts = p.split(/(`[^`]+`)/);
+      return codeParts.map((cp, k) => {
+        if (cp.startsWith("`") && cp.endsWith("`") && cp.length > 2) {
+          return <code key={`${j}-${k}`} className="px-1 py-0.5 rounded bg-white/5 text-[13px] font-mono text-primary">{cp.slice(1, -1)}</code>;
+        }
+        return cp || null;
+      });
+    });
+  }
+
+  function renderTable(rows: string[]) {
+    if (rows.length < 2) return null;
+    const isSep = (r: string) => /^[\s:|:-]+$/.test(r) && r.includes("---");
+    const bodyRows = rows.filter((r) => !isSep(r));
+    if (bodyRows.length === 0) return null;
+    const headCells = bodyRows[0].split("|").filter((c) => c.trim()).map((c) => c.trim());
+    return (
+      <div key={`t-${rows[0]}`} className="overflow-x-auto my-3">
+        <table className="w-full text-sm border-collapse">
+          <thead>
+            <tr className="border-b border-border">
+              {headCells.map((h, k) => (
+                <th key={k} className="text-left px-3 py-2 text-foreground font-semibold text-xs uppercase tracking-wider">{parseInline(h)}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {bodyRows.slice(1).map((row, ri) => {
+              const cells = row.split("|").filter((c) => c.trim()).map((c) => c.trim());
+              return (
+                <tr key={ri} className="border-b border-border/50 last:border-0">
+                  {cells.map((c, ci) => (
+                    <td key={ci} className="px-3 py-2 text-foreground/75 text-xs leading-relaxed">{parseInline(c)}</td>
+                  ))}
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    );
+  }
+
+  const renderContent = (text: string) => {
+    const lines = text.split("\n");
+    const elements: React.ReactNode[] = [];
+    let tableRows: string[] | null = null;
+
+    const flushTable = () => {
+      if (tableRows && tableRows.length > 0) {
+        elements.push(renderTable(tableRows));
+        tableRows = null;
+      }
+    };
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      const trimmed = line.trim();
+
+      if (trimmed.startsWith("|") && trimmed.endsWith("|")) {
+        if (!tableRows) tableRows = [];
+        tableRows.push(line);
+        continue;
+      }
+      flushTable();
+
+      const isSep = /^[-*_]{3,}$/.test(trimmed);
+      if (isSep) {
+        elements.push(<div key={i} className="my-4 border-t border-border/60" />);
+        continue;
+      }
+
+      if (trimmed.startsWith("### ")) {
+        elements.push(<h3 key={i} className="text-sm font-semibold text-foreground mt-4 mb-1.5">{parseInline(trimmed.slice(4))}</h3>);
+        continue;
+      }
+      if (trimmed.startsWith("## ")) {
+        elements.push(<h2 key={i} className="text-base font-semibold text-foreground mt-5 mb-2">{parseInline(trimmed.slice(3))}</h2>);
+        continue;
+      }
+      if (trimmed.startsWith("# ")) {
+        elements.push(<h1 key={i} className="text-lg font-semibold text-foreground mt-5 mb-2">{parseInline(trimmed.slice(2))}</h1>);
+        continue;
+      }
+
+      if (trimmed.startsWith("> ")) {
+        elements.push(<blockquote key={i} className="border-l-2 border-primary/30 pl-3 my-1.5 text-muted-foreground text-xs italic">{parseInline(trimmed.slice(2))}</blockquote>);
+        continue;
+      }
+
+      if (/^\d+[.)]\s/.test(trimmed)) {
+        const content = trimmed.replace(/^\d+[.)]\s/, "");
+        elements.push(
+          <div key={i} className="flex gap-2 my-0.5 pl-3">
+            <span className="text-primary text-xs mt-0.5 flex-shrink-0">{trimmed.match(/^\d+/)?.[0]}.</span>
+            <span className="text-foreground/80 text-sm leading-relaxed">{parseInline(content)}</span>
           </div>
         );
+        continue;
       }
-      return (
-        <span key={i}>
-          {line}{i < arr.length - 1 && <br />}
-        </span>
+
+      if (trimmed.startsWith("- ") || trimmed.startsWith("* ")) {
+        const content = trimmed.slice(2);
+        elements.push(
+          <div key={i} className="flex gap-2 my-0.5 pl-2">
+            <span className="text-primary mt-1 flex-shrink-0 text-xs">·</span>
+            <span className="text-foreground/80 text-sm leading-relaxed">{parseInline(content)}</span>
+          </div>
+        );
+        continue;
+      }
+
+      if (trimmed.startsWith("• ")) {
+        const content = trimmed.slice(2);
+        elements.push(
+          <div key={i} className="flex gap-2 my-0.5 pl-2">
+            <span className="text-primary mt-1 flex-shrink-0 text-xs">·</span>
+            <span className="text-foreground/80 text-sm leading-relaxed">{parseInline(content)}</span>
+          </div>
+        );
+        continue;
+      }
+
+      if (trimmed === "") {
+        elements.push(<div key={i} className="h-2" />);
+        continue;
+      }
+
+      elements.push(
+        <p key={i} className="text-foreground/80 text-sm leading-relaxed">{parseInline(trimmed)}</p>
       );
-    });
+    }
+
+    flushTable();
+    return elements;
+  };
 
   return (
     <motion.div className="flex gap-3.5 group"
