@@ -8,9 +8,9 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: "Message is required" });
   }
 
-  const MISTRAL_API_KEY = process.env.MISTRAL_API_KEY;
-  if (!MISTRAL_API_KEY) {
-    return res.status(500).json({ error: "MISTRAL_API_KEY not configured" });
+  const NVIDIA_API_KEY = process.env.NVIDIA_API_KEY;
+  if (!NVIDIA_API_KEY) {
+    return res.status(500).json({ error: "NVIDIA_API_KEY not configured" });
   }
 
   const messages = [
@@ -20,23 +20,29 @@ export default async function handler(req, res) {
   messages.push({ role: "user", content: message });
 
   try {
-    const response = await fetch("https://api.mistral.ai/v1/chat/completions", {
+    const response = await fetch("https://integrate.api.nvidia.com/v1/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${MISTRAL_API_KEY}`,
+        Authorization: `Bearer ${NVIDIA_API_KEY}`,
       },
       body: JSON.stringify({
-        model: "mistral-small-latest",
+        model: "nvidia/nemotron-3-ultra-550b-a55b",
         messages,
-        max_tokens: 2048,
-        temperature: 0.7,
+        temperature: 1,
+        top_p: 0.95,
+        max_tokens: 16384,
+        stream: false,
+        extra_body: {
+          chat_template_kwargs: { enable_thinking: true },
+          reasoning_budget: 16384,
+        },
       }),
     });
 
     if (!response.ok) {
       const err = await response.text();
-      return res.status(response.status).json({ error: `Mistral API error: ${err}` });
+      return res.status(response.status).json({ error: `NVIDIA API error: ${err}` });
     }
 
     const data = await response.json();
