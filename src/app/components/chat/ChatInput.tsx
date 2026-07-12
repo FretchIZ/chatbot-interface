@@ -1,5 +1,5 @@
 import { motion } from "motion/react";
-import { Paperclip, Globe, Mic, ArrowUp } from "lucide-react";
+import { Paperclip, Plus, Mic, ArrowUp } from "lucide-react";
 
 function ToolBtn({ icon, label }: { icon: React.ReactNode; label: string }) {
   return (
@@ -43,8 +43,8 @@ export function ChatInput({
 
       <div className="absolute bottom-0 left-0 right-0 flex items-center justify-between px-3 pb-3">
         <div className="flex items-center gap-0.5">
+          <ToolBtn icon={<Plus size={14} />} label="Add attachment" />
           <ToolBtn icon={<Paperclip size={14} />} label="Attach file" />
-          <ToolBtn icon={<Globe size={14} />} label="Search web" />
           <ToolBtn icon={<Mic size={14} />} label="Voice input" />
           <div className="w-px h-3.5 bg-border mx-1.5" />
           <span className="text-[10px] text-muted-foreground/30 font-medium hidden sm:inline">Shift + Enter for newline</span>

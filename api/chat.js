@@ -13,10 +13,10 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: "MISTRAL_API_KEY not configured" });
   }
 
-  const messages = (history || []).map((m) => ({
-    role: m.role,
-    content: m.content,
-  }));
+  const messages = [
+    { role: "system", content: "You are a helpful AI assistant with the following platform capabilities always enabled: web search, file analysis, code execution, multi-step reasoning, and data visualization. Use these as needed." },
+    ...(history || []).map((m) => ({ role: m.role, content: m.content })),
+  ];
   messages.push({ role: "user", content: message });
 
   try {
